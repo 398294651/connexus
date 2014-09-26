@@ -1,3 +1,28 @@
 {% include 'header.html' %}
 <script>$('#create').addClass("active")</script>
 
+<form class="form-horizontal" style="width:70%" action="/stream" method="post">
+    <div class="form-group">
+        <label for="inputStream" class="control-label col-xs-2">Your Cool Stream Name: </label>
+        <div class="col-xs-10">
+            <input type="text" class="form-control" name="name" placeholder="hook em">
+        </div>
+    </div>
+    <div class="form-group">
+        <label for="inputTags" class="control-label col-xs-2">Tag your Awesome stream: </label>
+        <div class="col-xs-10">
+            <input type="text" class="form-control" name="tags" placeholder="longhorn, texas">
+        </div>
+    </div>
+    <div class="form-group">
+        <label for="inputCover" class="control-label col-xs-2">Cover Image: </label>
+        <div class="col-xs-10">
+            <input type="url" class="form-control" name="cover" placeholder="http://www-tc.pbs.org/wnet/nature/koko/images/wallpaper/koko_large.jpg">
+        </div>
+    </div>
+    <div class="form-group">
+        <div class="col-xs-offset-2 col-xs-10">
+            <button type="submit" class="btn btn-primary">Create Stream</button>
+        </div>
+    </div>
+</form>

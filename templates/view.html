@@ -1,3 +1,35 @@
 {% include 'header.html' %}
 <script>$('#view').addClass("active")</script>
 
+
+{% for image_id in image_ids %}
+<div><img src="image?image_id={{ image_id }}"></img><br/>
+{% endfor %}
+
+<br/>
+
+<form class="form-horizontal" style="width:70%" action="/image" method="post" enctype="multipart/form-data">
+    <div class="form-group">
+        <label for="inputStream" class="control-label col-xs-2">Photo: </label>
+        <div class="col-xs-10">
+            <input type="file" class="form-control" name="img">
+        </div>
+    </div>
+    <div class="form-group">
+        <label for="inputTags" class="control-label col-xs-2">Comment: </label>
+        <div class="col-xs-10">
+            <input type="text" class="form-control" name="comment" placeholder="memories...">
+        </div>
+    </div>
+    <div class="form-group">
+        <label for="inputTags" class="control-label col-xs-2">To Stream: </label>
+        <div class="col-xs-10">
+            <input type="text" class="form-control" name="stream_id" value="{{stream_name}}" readonly>
+        </div>
+    </div>
+    <div class="form-group">
+        <div class="col-xs-offset-2 col-xs-10">
+            <button type="submit" class="btn btn-primary">Upload Photo</button>
+        </div>
+    </div>
+</form>

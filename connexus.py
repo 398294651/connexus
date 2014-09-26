@@ -1,5 +1,7 @@
 import json
 import os
+import requests
+from urlparse import urlparse
 
 import jinja2
 import webapp2
@@ -77,7 +79,6 @@ class HandleStream(webapp2.RequestHandler):
         return self.response.out.write(json.dumps(stream_list, cls=MyEncoder))
 
     def show_all_streams(self):
-        self.response.headers['Content-Type'] = 'application/json'
         if self.request.get('trending') == 'true':
             return self.show_trending()
         streams = Stream.query().order(Stream.date).fetch()
@@ -85,29 +86,34 @@ class HandleStream(webapp2.RequestHandler):
         return self.response.out.write(json.dumps(streams, cls=MyEncoder))
 
     def get(self):
+        self.response.headers['Content-Type'] = 'application/json'
         stream_name = self.request.get('stream_name')
         if not stream_name:
             return self.show_all_streams()
         stream = Stream.get_by_id(stream_name)
         if not stream:
             return self.error(404)
+        """
         for image in stream.image_ids:
             out = self.response.out
             out.write('<div><img src="image?image_id=%s"></img>' %
                       image.get().key.id())
+        """
         # Increment View Count
         stream.view_count += 1
         stream.put()
         View(stream_id=stream.key).put()
+        return self.response.out.write(json.dumps(stream.to_dict(),
+                                                  cls=MyEncoder))
 
     def post(self):
         req = self.request
-        user_id = req.get('user_id')
+        if not populate_user()['logged_in']:
+            self.redirect('/')
+        user_id = populate_user()['nickname']
         stream_name = req.get('name')
         stream_tags = req.get('tags').split(',')
         stream_cover = req.get('cover') or DEFAULT_COVER
-        if not user_id:
-            return self.response.out.write('Sorry! Authenticate first.')
         if Stream.get_by_id(stream_name):
             return self.response.out.write('Sorry! Stream already exists.')
         stream = Stream(id=stream_name, tags=stream_tags,
@@ -115,7 +121,7 @@ class HandleStream(webapp2.RequestHandler):
         user = User.get_by_id(user_id)
         user.owned_ids.append(stream)
         user.put()
-        return self.response.out.write('Success creating... %s' % stream.id())
+        self.redirect('/manage')
 
 
 class HandleSearch(webapp2.RequestHandler):
@@ -152,7 +158,7 @@ class HandleImage(webapp2.RequestHandler):
                       comment=self.request.get('comment')).put()
         stream.image_ids.append(image)
         stream.put()
-        return self.response.out.write('Success!')
+        self.redirect('/view?stream_name='+stream_id)
 
 
 class HandleTrendingUI(webapp2.RequestHandler):
@@ -176,7 +182,19 @@ class HandleCreateStreamUI(webapp2.RequestHandler):
 class HandleViewStreamUI(webapp2.RequestHandler):
     def get(self):
         template = JINJA_ENVIRONMENT.get_template('view.html')
-        self.response.write(template.render(populate_user()))
+        data = populate_user()
+        name = self.request.get('stream_name')
+        if not name:
+            # TODO: Handle this case
+            return self.redirect('/')
+        domain = '{uri.scheme}://{uri.netloc}'.format(
+            uri=urlparse(self.request.url))
+        response = requests.get(domain + '/stream',
+                                params={'stream_name': name})
+        data['stream_name'] = name
+        if response.status_code == requests.codes.OK:
+            data['image_ids'] = response.json()['image_ids']
+        self.response.write(template.render(data))
 
 
 class HandleLogin(webapp2.RequestHandler):
