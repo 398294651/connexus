@@ -1,6 +1,7 @@
 import json
 import os
 import requests
+import time
 from urlparse import urlparse
 
 import jinja2
@@ -58,6 +59,8 @@ class HandleCron(webapp2.RequestHandler):
         duration = self.request.get('duration')
         Leaderboard.refresh(duration)
         # TODO: Change cron timings
+        time.sleep(1)
+        return self.redirect('/trending?duration='+duration)
 
 
 class HandleSubsrciption(webapp2.RequestHandler):
@@ -191,6 +194,7 @@ class HandleTrendingUI(webapp2.RequestHandler):
         data = populate_user()
         data['streams'] = requests.get(
             domain(self.request.url) + '/stream?trending=true').json()
+        data['duration'] = self.request.get('duration')
         return self.response.write(template.render(data))
 
 
