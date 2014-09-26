@@ -1,3 +1,17 @@
 {% include 'header.html' %}
 <script>$('#search').addClass("active")</script>
 
+  <form class="form" role="search" style="width:30%" action="/search" method="get">
+    <div class="form-group">
+        <input type="text" class="form-control" placeholder="Search" name="query" value="{{query}}">
+    </div>
+    <button type="submit" class="btn btn-default">Search</button>
+  </form>
+
+  <h5>There are {{results_count}} results matching.</h5>
+  <h6>Results</h6>
+
+{% for stream in results %}
+    <a href="/view?stream_name={{stream.id}}"><img src="{{stream.cover_url}}" width="10%"></a>
+    <figcaption>{{stream.id}}</figcaption>
+{% endfor %}

@@ -11,14 +11,19 @@ from google.appengine.api import images, users
 from models import Image, Stream, Leaderboard, View, User
 from utils import MyEncoder
 
-DEFAULT_COVER = "http://college-social.com/content \
-        /uploads/2014/03/not-found.png"
+DEFAULT_COVER = "http://college-social.com/content" + \
+    "/uploads/2014/03/not-found.png"
 
 PATH = os.path.dirname(__file__)
 JINJA_ENVIRONMENT = jinja2.Environment(
     loader=jinja2.FileSystemLoader([PATH, PATH + '/templates']),
     extensions=['jinja2.ext.autoescape'],
     autoescape=True)
+
+
+def domain(url):
+    return '{uri.scheme}://{uri.netloc}'.format(
+        uri=urlparse(url))
 
 
 def populate_user():
@@ -38,13 +43,13 @@ def populate_user():
 
 class HandleUser(webapp2.RequestHandler):
     def get(self):
-        if not populate_user()['logged_in']:
-            self.redirect('/')
-        user = User.get_by_id(populate_user()['nickname'])
+        user = User.get_by_id(self.request.get('user_id'))
         if not user:
             return self.response.out.write("Not found!")
         self.response.headers['Content-Type'] = 'application/json'
         user_dict = user.to_dict()
+        user_dict['owned_id_details'] = user.owned_id_details()
+        user_dict['subscribed_id_details'] = user.subscribed_id_details()
         return self.response.out.write(json.dumps(user_dict, cls=MyEncoder))
 
 
@@ -57,18 +62,36 @@ class HandleCron(webapp2.RequestHandler):
 
 class HandleSubsrciption(webapp2.RequestHandler):
     def post(self):
-        user_id = self.request.get('user_id')
-        stream_id = self.request.get('stream_id')
+        if not populate_user()['logged_in']:
+            return self.redirect('/')
+        user_id = populate_user()['nickname']
+        stream_id = self.request.get('stream_name')
         user = User.get_by_id(user_id)
         if not user:
             return self.response.out.write("Not Found!")
         user.subscribed_ids.append(Stream.get_by_id(stream_id).key)
         user.put()
+        return self.redirect('/view?stream_name='+stream_id)
+
+
+class HandleUnsubsrciption(webapp2.RequestHandler):
+    def post(self):
+        if not populate_user()['logged_in']:
+            return self.redirect('/')
+        user_id = populate_user()['nickname']
+        stream_id = self.request.get('stream_name')
+        user = User.get_by_id(user_id)
+        if not user:
+            return self.response.out.write("Not Found!")
+        user.subscribed_ids = [sub for sub in user.subscribed_ids
+                               if stream_id != sub.id()]
+        user.put()
+        return self.redirect('/view?stream_name='+stream_id)
 
 
 class HandleStream(webapp2.RequestHandler):
     def show_trending(self):
-        count = int(self.request.get('count', 5))
+        count = int(self.request.get('count', 3))
         leaders = Leaderboard.query().order(
             -Leaderboard.view_count).fetch(count)
         stream_list = []
@@ -109,7 +132,7 @@ class HandleStream(webapp2.RequestHandler):
     def post(self):
         req = self.request
         if not populate_user()['logged_in']:
-            self.redirect('/')
+            return self.redirect('/')
         user_id = populate_user()['nickname']
         stream_name = req.get('name')
         stream_tags = req.get('tags').split(',')
@@ -121,23 +144,24 @@ class HandleStream(webapp2.RequestHandler):
         user = User.get_by_id(user_id)
         user.owned_ids.append(stream)
         user.put()
-        self.redirect('/manage')
+        return self.redirect('/manage')
 
 
 class HandleSearch(webapp2.RequestHandler):
     def get(self):
-        template = JINJA_ENVIRONMENT.get_template('search.html')
-        self.response.write(template.render(populate_user()))
-
-    def post(self):
         query = self.request.get('query')
-        self.response.headers['Content-Type'] = 'application/json'
         stream_list = []
-        for stream in Stream.query().fetch():
-            if query in stream.key.id() or stream.check_tags(query):
-                stream_dict = stream.to_dict()
-                stream_list.append(stream_dict)
-        return self.response.out.write(json.dumps(stream_list, cls=MyEncoder))
+        if query:
+            for stream in Stream.query().fetch():
+                if query in stream.key.id() or stream.check_tags(query):
+                    stream_dict = stream.to_dict()
+                    stream_list.append(stream_dict)
+        data = populate_user()
+        data['results'] = stream_list[:5]
+        data['results_count'] = len(stream_list)
+        data['query'] = query
+        template = JINJA_ENVIRONMENT.get_template('search.html')
+        self.response.write(template.render(data))
 
 
 class HandleImage(webapp2.RequestHandler):
@@ -158,19 +182,27 @@ class HandleImage(webapp2.RequestHandler):
                       comment=self.request.get('comment')).put()
         stream.image_ids.append(image)
         stream.put()
-        self.redirect('/view?stream_name='+stream_id)
+        return self.redirect('/view?stream_name='+stream_id)
 
 
 class HandleTrendingUI(webapp2.RequestHandler):
     def get(self):
         template = JINJA_ENVIRONMENT.get_template('trending.html')
-        self.response.write(template.render(populate_user()))
+        data = populate_user()
+        data['streams'] = requests.get(
+            domain(self.request.url) + '/stream?trending=true').json()
+        return self.response.write(template.render(data))
 
 
 class HandleManageUserUI(webapp2.RequestHandler):
     def get(self):
+        if not populate_user()['logged_in']:
+            return self.redirect('/')
+        data = populate_user()
+        response = requests.get(domain(self.request.url) + '/user',
+                                params={'user_id': data['nickname']}).json()
         template = JINJA_ENVIRONMENT.get_template('manage.html')
-        self.response.write(template.render(populate_user()))
+        return self.response.write(template.render(response))
 
 
 class HandleCreateStreamUI(webapp2.RequestHandler):
@@ -181,19 +213,24 @@ class HandleCreateStreamUI(webapp2.RequestHandler):
 
 class HandleViewStreamUI(webapp2.RequestHandler):
     def get(self):
-        template = JINJA_ENVIRONMENT.get_template('view.html')
         data = populate_user()
         name = self.request.get('stream_name')
         if not name:
-            # TODO: Handle this case
-            return self.redirect('/')
-        domain = '{uri.scheme}://{uri.netloc}'.format(
-            uri=urlparse(self.request.url))
-        response = requests.get(domain + '/stream',
+            template = JINJA_ENVIRONMENT.get_template('view_all.html')
+            response = requests.get(
+                domain(self.request.url) + '/stream').json()
+            data['streams'] = response
+            return self.response.write(template.render(data))
+        response = requests.get(domain(self.request.url) + '/stream',
                                 params={'stream_name': name})
+        if data['logged_in']:
+            user_id = data['nickname']
+            data['is_subscribed'] = User.get_by_id(user_id).is_subscribed(name)
+            data['is_owned'] = User.get_by_id(user_id).is_owned(name)
         data['stream_name'] = name
         if response.status_code == requests.codes.OK:
             data['image_ids'] = response.json()['image_ids']
+        template = JINJA_ENVIRONMENT.get_template('view.html')
         self.response.write(template.render(data))
 
 
@@ -215,5 +252,6 @@ app = webapp2.WSGIApplication([
     ('/image', HandleImage),
     ('/search', HandleSearch),
     ('/cron', HandleCron),
-    ('/subscribe', HandleSubsrciption)
+    ('/subscribe', HandleSubsrciption),
+    ('/unsubscribe', HandleUnsubsrciption)
 ])

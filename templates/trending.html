@@ -1,3 +1,9 @@
 {% include 'header.html' %}
 <script>$('#trending').addClass("active")</script>
 
+<h3>Trending streams</h3><br/>
+{% for stream in streams %}
+    <a href="/view?stream_name={{stream.id}}"><img src="{{stream.cover_url}}" width="10%"></a>
+    <figcaption>{{stream.id}} : {{stream.view_count}} hits in last {{stream.interval}} minutes</figcaption>
+    
+{% endfor %}

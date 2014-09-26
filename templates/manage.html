@@ -1,2 +1,14 @@
 {% include 'header.html' %}
 <script>$('#manage').addClass("active")</script>
+
+<h3>Streams You own:</h3>
+{% for owned_id in owned_id_details %}
+<a href="/view?stream_name={{owned_id.name}}">{{owned_id.name}}</a>
+{{owned_id.last_date}} &nbsp; {{owned_id.image_count}} <br/>
+{% endfor %}
+
+<h3>Streams You subscribed:</h3>
+{% for subscribed_id in subscribed_id_details %}
+<a href="/view?stream_name={{subscribed_id.name}}">{{subscribed_id.name}}</a>
+{{subscribed_id.last_date}} &nbsp; {{subscribed_id.image_count}} &nbsp; {{subscribed_id.view_count}}<br/>
+{% endfor %}

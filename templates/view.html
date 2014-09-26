@@ -33,3 +33,23 @@
         </div>
     </div>
 </form>
+
+<br/>
+
+{% if logged_in %}
+    {% if is_owned %}
+    <h4> You currently own this stream! </h4>
+    {% else %}
+        {% if is_subscribed %}
+            <form action="/unsubscribe?stream_name={{stream_name}}" method="post">
+                <button name="unsubscribe">Unsubscribe</button>
+            </form>
+        {% else %}
+            <form action="/subscribe?stream_name={{stream_name}}" method="post">
+                <button name="subscribe">Subscribe</button>
+            </form>
+        {% endif %}
+    {% endif %}
+{% else %}
+    <h4> Please log in Subscribe.</h4>
+{% endif %}
