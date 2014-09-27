@@ -15,9 +15,13 @@ class ModelUtils(object):
 class MyEncoder(json.JSONEncoder):
     def default(self, obj):
         if isinstance(obj, datetime.datetime):
-            return int(mktime(obj.timetuple()))
+            return obj.strftime('%Y-%m-%d')
 
         if isinstance(obj, ndb.Key):
             return obj.id()
 
         return json.JSONEncoder.default(self, obj)
+
+
+def prettify_date(date):
+    return None if not date else date.strftime('%Y-%m-%d')

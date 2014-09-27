@@ -203,10 +203,10 @@ class HandleManageUserUI(webapp2.RequestHandler):
         if not populate_user()['logged_in']:
             return self.redirect('/')
         data = populate_user()
-        response = requests.get(domain(self.request.url) + '/user',
-                                params={'user_id': data['nickname']}).json()
+        data.update(requests.get(domain(self.request.url) + '/user',
+                    params={'user_id': data['nickname']}).json())
         template = JINJA_ENVIRONMENT.get_template('manage.html')
-        return self.response.write(template.render(response))
+        return self.response.write(template.render(data))
 
 
 class HandleCreateStreamUI(webapp2.RequestHandler):
@@ -238,6 +238,40 @@ class HandleViewStreamUI(webapp2.RequestHandler):
         self.response.write(template.render(data))
 
 
+class HandleDeleteMulti(webapp2.RequestHandler):
+    def post(self):
+        body = json.loads(self.request.body)
+        user_id = body['user_id']
+        if not user_id or not User.get_by_id(user_id):
+            return self.redirect('/')
+        user = User.get_by_id(user_id)
+        stream_ids = body['stream_ids']
+        for stream_id in stream_ids:
+            stream = Stream.get_by_id(stream_id)
+            if not stream:
+                continue
+            stream_key = stream.key
+            if user.is_owned(stream_id):
+                stream_key.delete()
+        user.owned_ids = [sub for sub in user.owned_ids
+                          if sub.id() not in stream_ids]
+        user.put()
+        Leaderboard.refresh()
+
+
+class HandleUnsubsrciptionMulti(webapp2.RequestHandler):
+    def post(self):
+        body = json.loads(self.request.body)
+        user_id = body['user_id']
+        if not user_id or not User.get_by_id(user_id):
+            return self.redirect('/')
+        user = User.get_by_id(user_id)
+        stream_ids = body['stream_ids']
+        user.subscribed_ids = [sub for sub in user.subscribed_ids
+                               if sub.id() not in stream_ids]
+        user.put()
+
+
 class HandleLogin(webapp2.RequestHandler):
     def get(self):
         template = JINJA_ENVIRONMENT.get_template('index.html')
@@ -256,6 +290,8 @@ app = webapp2.WSGIApplication([
     ('/image', HandleImage),
     ('/search', HandleSearch),
     ('/cron', HandleCron),
+    ('/delete_stream', HandleDeleteMulti),
     ('/subscribe', HandleSubsrciption),
-    ('/unsubscribe', HandleUnsubsrciption)
+    ('/unsubscribe', HandleUnsubsrciption),
+    ('/unsubscribe_many', HandleUnsubsrciptionMulti)
 ])

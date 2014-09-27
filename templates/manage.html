@@ -2,13 +2,93 @@
 <script>$('#manage').addClass("active")</script>
 
 <h3>Streams You own:</h3>
-{% for owned_id in owned_id_details %}
-<a href="/view?stream_name={{owned_id.name}}">{{owned_id.name}}</a>
-{{owned_id.last_date}} &nbsp; {{owned_id.image_count}} <br/>
-{% endfor %}
+{% if owned_id_details %}
+<div style="width:60%">
+    <table id="owned" class="display" cellspacing="0" width="100%">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Last New Picture</th>
+                <th># Pictures</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for owned_id in owned_id_details %}
+            <tr>
+                <td><a href="/view?stream_name={{owned_id.name}}" name="{{owned_id.name}}">{{owned_id.name}}</a></td>
+                <td>{{owned_id.last_date}}</td>
+                <td>{{owned_id.image_count}}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% else %}
+<h4>None</h4>
+{% endif %}
+
+<br/><center>
+ (Click on rows to select.)<button name="delete" onclick="delete_owned()">Delete Streams</button>
+</center>
 
 <h3>Streams You subscribed:</h3>
-{% for subscribed_id in subscribed_id_details %}
-<a href="/view?stream_name={{subscribed_id.name}}">{{subscribed_id.name}}</a>
-{{subscribed_id.last_date}} &nbsp; {{subscribed_id.image_count}} &nbsp; {{subscribed_id.view_count}}<br/>
-{% endfor %}
+{% if subscribed_id_details %}
+<div style="width:60%">
+    <table id="subscribed" class="display" cellspacing="0" width="100%">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Last New Picture</th>
+                <th># Pictures</th>
+                <th># Views</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for subscribed_id in subscribed_id_details %}
+            <tr>
+                <td><a href="/view?stream_name={{subscribed_id.name}}" name="{{subscribed_id.name}}">{{subscribed_id.name}}</a></td>
+                <td>{{subscribed_id.last_date}}</td>
+                <td>{{subscribed_id.image_count}}</td>
+                <td>{{subscribed_id.view_count}}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% else %}
+<h4>None</h4>
+{% endif %}
+
+<br/><center>
+ (Click on rows to select.)<button name="delete" onclick="delete_subscribed()">Unsubscribe Streams</button>
+</center>
+
+<script>
+$(document).ready(function() {
+    $('#owned').dataTable();
+    $('#subscribed').dataTable();
+} );
+
+$('#owned tbody').on( 'click', 'tr', function () {
+    $(this).toggleClass('selected');
+} );
+
+$('#subscribed tbody').on( 'click', 'tr', function () {
+    $(this).toggleClass('selected');
+} );
+
+function delete_owned() {
+    var list = $('#owned .selected a').map(function(){return $(this).attr("name");}).get();
+    $.post( "/delete_stream",
+            JSON.stringify({ user_id: "{{nickname}}", stream_ids: list }) );
+    $('#owned .selected').map(function(){return $(this).remove();});
+}
+
+function delete_subscribed() {
+    var list = $('#subscribed .selected a').map(function(){return $(this).attr("name");}).get();
+    $.post( "/unsubscribe_many",
+            JSON.stringify({ user_id: "{{nickname}}", stream_ids: list }) );
+    $('#subscribed .selected').map(function(){return $(this).remove();});
+}
+
+</script>

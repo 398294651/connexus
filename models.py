@@ -91,5 +91,6 @@ class Leaderboard(ndb.Model):
         ndb.delete_multi(Leaderboard.query().fetch(keys_only=True))
 
         for stream in sorted_streams:
-            Leaderboard(stream_id=stream[0], view_count=stream[1],
-                        interval=duration).put()
+            if stream[0].get():
+                Leaderboard(stream_id=stream[0], view_count=stream[1],
+                            interval=duration).put()
