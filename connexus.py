@@ -7,7 +7,7 @@ from urlparse import urlparse
 import jinja2
 import webapp2
 from google.appengine.ext import db
-from google.appengine.api import images, users
+from google.appengine.api import images, users, mail
 
 from models import Image, Stream, Leaderboard, View, User
 from utils import MyEncoder
@@ -41,6 +41,13 @@ def populate_user():
                 'header_url': users.create_login_url('/')}
     return meta
 
+def send_subscribtion_invite_email(stream_add_subscribers_email_list,stream_email_body,stream_name,request_url):
+    stream_link = domain(request_url) + '/view?stream_name=' + stream_name
+    #TODO: de-duplicate email addresses
+    for add in stream_add_subscribers_email_list:
+        print add
+        mail.send_mail(sender="sreesurendran55@gmail.com",to=add,subject="Test",body=stream_email_body + '\n' + stream_link)
+    return
 
 class HandleUser(webapp2.RequestHandler):
     def get(self):
@@ -140,13 +147,21 @@ class HandleStream(webapp2.RequestHandler):
         stream_name = req.get('name')
         stream_tags = req.get('tags').split(',')
         stream_cover = req.get('cover') or DEFAULT_COVER
+        stream_add_subscribers_email_list = req.get('email_list').split(',')
+        stream_email_body = req.get('email_body')
         if Stream.get_by_id(stream_name):
-            return self.response.out.write('Sorry! Stream already exists.')
+            #redirect to error page
+            #return self.response.out.write('Sorry! Stream already exists.')
+            return self.redirect('/error')
         stream = Stream(id=stream_name, tags=stream_tags,
                         cover_url=stream_cover).put()
         user = User.get_by_id(user_id)
         user.owned_ids.append(stream)
         user.put()
+        #on successful insert, send email
+        if(Stream.get_by_id(stream_name)):
+            #send email
+            send_subscribtion_invite_email(stream_add_subscribers_email_list,stream_email_body,stream_name,self.request.url)
         return self.redirect('/manage')
 
 
@@ -277,6 +292,15 @@ class HandleLogin(webapp2.RequestHandler):
         template = JINJA_ENVIRONMENT.get_template('index.html')
         self.response.write(template.render(populate_user()))
 
+class HandleErrorUI(webapp2.RequestHandler):
+    def get(self):
+        template = JINJA_ENVIRONMENT.get_template('error.html')
+        self.response.write(template.render(populate_user()))
+
+class HandleSocialUI(webapp2.RequestHandler):
+    def get(self):
+        template = JINJA_ENVIRONMENT.get_template('social.html')
+        self.response.write(template.render(populate_user()))
 
 app = webapp2.WSGIApplication([
     ('/', HandleLogin),
@@ -293,5 +317,7 @@ app = webapp2.WSGIApplication([
     ('/delete_stream', HandleDeleteMulti),
     ('/subscribe', HandleSubsrciption),
     ('/unsubscribe', HandleUnsubsrciption),
-    ('/unsubscribe_many', HandleUnsubsrciptionMulti)
+    ('/unsubscribe_many', HandleUnsubsrciptionMulti),
+    ('/error',HandleErrorUI),
+    ('/social',HandleSocialUI)
 ])
