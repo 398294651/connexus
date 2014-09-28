@@ -1,7 +1,7 @@
 cron:
 - description: hourly job to update leaderboard
   url: /update_leaderboard
-  schedule: every 1 hours
+  schedule: every 1 hours synchronized
 - description: 5 mins job to email
   url: /cron
-  schedule: every 5 mins
+  schedule: every 5 mins synchronized
