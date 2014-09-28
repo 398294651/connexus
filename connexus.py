@@ -24,7 +24,7 @@ IMG_CNT = 8
 IMG_OFF = 0
 SEARCH_COUNT = 5
 LEADERBOARD_UPDATE_DURATION = 60
-SENDER = "sreesurendran55@gmail.com"
+SENDER = "conneksus@appspot.gserviceaccount.com"
 EMAIL_RCVR = ["sreesurendran55@gmail.com", "prat0318@gmail.com",
               "ragha@utexas.edu", "natviv@cs.utexas.edu"]
 
