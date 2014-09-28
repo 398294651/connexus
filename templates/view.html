@@ -2,9 +2,17 @@
 <script>$('#view').addClass("active")</script>
 
 
+{% if prev %}
+<button class="btn btn-warning" name="prev" onclick='new_off= {{offset}}>={{count}}?{{offset}}-{{count}}:0;window.location.href="view?stream_name={{ stream_name }}&offset="+new_off;'>Prev</button>
+{% endif %}
 {% for image_id in image_ids %}
-<div><img src="image?image_id={{ image_id }}"></img><br/>
+    <div class="pic">
+        <a href="/image?image_id={{ image_id }}"><img class="pic-image img-polaroid" src="image?image_id={{ image_id }}"></a>
+    </div>
 {% endfor %}
+{% if more %}
+<button class="btn btn-success" name="more" onclick='window.location.href="view?stream_name={{ stream_name }}&offset="+({{offset}} + {{count}});'>Next</button>
+{% endif %}
 
 <br/>
 
@@ -38,15 +46,16 @@
 
 {% if logged_in %}
     {% if is_owned %}
+    <button class="btn btn-info" name="subscribe" disabled>Subscribe</button>
     <h4> You currently own this stream! </h4>
     {% else %}
         {% if is_subscribed %}
             <form action="/unsubscribe?stream_name={{stream_name}}" method="post">
-                <button name="unsubscribe">Unsubscribe</button>
+                <button class="btn btn-info" name="unsubscribe">Unsubscribe</button>
             </form>
         {% else %}
             <form action="/subscribe?stream_name={{stream_name}}" method="post">
-                <button name="subscribe">Subscribe</button>
+                <button class="btn btn-info" name="subscribe">Subscribe</button>
             </form>
         {% endif %}
     {% endif %}

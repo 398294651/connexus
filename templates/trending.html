@@ -3,9 +3,10 @@
 
 <h3>Trending streams</h3><br/>
 {% for stream in streams %}
-    <a href="/view?stream_name={{stream.id}}"><img src="{{stream.cover_url}}" width="10%"></a>
-    <figcaption>{{stream.id}} : {{stream.view_count}} hits in last {{stream.interval}} minutes</figcaption>
-    
+    <div class="pic">
+        <img class="pic-image" src="{{stream.cover_url}}">
+        <a href="/view?stream_name={{stream.id}}"><span style="color: white" class="pic-caption bottom-to-top"><h1 class="pic-title">{{stream.id}} : {{stream.view_count}} hits in last {{stream.interval}} minutes</h1><p>Click to dig</p></span></a>
+    </div>
 {% endfor %}
 
 <h4>Update the refresh interval:</h4>

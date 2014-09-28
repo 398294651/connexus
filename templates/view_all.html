@@ -1,10 +1,11 @@
 {% include 'header.html' %}
 <script>$('#view').addClass("active")</script>
 
-
 <h3>All streams</h3><br/>
 {% for stream in streams %}
-    <a href="/view?stream_name={{stream.id}}"><img src="{{stream.cover_url}}" width="10%"></a>
-    <figcaption>{{stream.id}}</figcaption>
+    <div class="pic">
+        <img class=" img-rounded pic-image" src="{{stream.cover_url}}">
+        <a href="/view?stream_name={{stream.id}}"><span  style="color: white" class="pic-caption bottom-to-top"><h1 class="pic-title">{{stream.id}}</h1><p>Click to dig</p></span></a>
+    </div>
 {% endfor %}
 
