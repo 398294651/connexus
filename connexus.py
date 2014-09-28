@@ -24,6 +24,9 @@ IMG_CNT = 8
 IMG_OFF = 0
 SEARCH_COUNT = 5
 LEADERBOARD_UPDATE_DURATION = 60
+SENDER = "sreesurendran55@gmail.com"
+EMAIL_RCVR = ["sreesurendran55@gmail.com", "prat0318@gmail.com",
+              "ragha@utexas.edu", "natviv@cs.utexas.edu"]
 
 
 def domain(url):
@@ -45,13 +48,18 @@ def populate_user():
                 'header_url': users.create_login_url('/')}
     return meta
 
-def send_subscribtion_invite_email(stream_add_subscribers_email_list,stream_email_body,stream_name,request_url):
+
+def send_subscribtion_invite_email(stream_add_subscribers_email_list,
+                                   stream_email_body, stream_name,
+                                   request_url):
     stream_link = domain(request_url) + '/view?stream_name=' + stream_name
-    #TODO: de-duplicate email addresses
+    # TODO: de-duplicate email addresses
     for add in stream_add_subscribers_email_list:
-        print add
-        mail.send_mail(sender="sreesurendran55@gmail.com",to=add,subject="Test",body=stream_email_body + '\n' + stream_link)
+        mail.send_mail(sender=SENDER,
+                       to=add, subject="Invite for " + stream_name,
+                       body=stream_email_body + '\n' + stream_link)
     return
+
 
 class HandleUser(webapp2.RequestHandler):
     def get(self):
@@ -93,7 +101,10 @@ class HandleEmailCron(webapp2.RequestHandler):
             if ((duration == 5) or
                 (duration == 60 and time.minute == 0) or (
                     duration == 1440 and time.hour == 0 and time.minute == 0)):
-                    return self.response.out.write(email_trends())
+                    for to in EMAIL_RCVR:
+                        mail.send_mail(sender=SENDER,
+                                       to=to, subject="[APT] Trending updates",
+                                       body=email_trends())
 
     def post(self):
         duration = self.request.get('duration')
@@ -179,7 +190,8 @@ class HandleStream(webapp2.RequestHandler):
         stream_name = req.get('name')
         stream_tags = req.get('tags').split(',')
         stream_cover = req.get('cover') or DEFAULT_COVER
-        stream_add_subscribers_email_list = req.get('email_list').split(',')
+        stream_add_subscribers_email_list = req.get(
+            'email_list').split(',')
         stream_email_body = req.get('email_body')
         if Stream.get_by_id(stream_name):
             data['msg'] = 'Sorry! Stream already exists.'
@@ -190,10 +202,11 @@ class HandleStream(webapp2.RequestHandler):
         user = User.get_by_id(user_id)
         user.owned_ids.append(stream)
         user.put()
-        #on successful insert, send email
+        # on successful insert, send email
         if(Stream.get_by_id(stream_name)):
-            #send email
-            send_subscribtion_invite_email(stream_add_subscribers_email_list,stream_email_body,stream_name,self.request.url)
+            send_subscribtion_invite_email(stream_add_subscribers_email_list,
+                                           stream_email_body, stream_name,
+                                           self.request.url)
         return self.redirect('/manage')
 
 
@@ -335,10 +348,6 @@ class HandleLogin(webapp2.RequestHandler):
         template = JINJA_ENVIRONMENT.get_template('index.html')
         self.response.write(template.render(populate_user()))
 
-class HandleErrorUI(webapp2.RequestHandler):
-    def get(self):
-        template = JINJA_ENVIRONMENT.get_template('error.html')
-        self.response.write(template.render(populate_user()))
 
 class HandleSocialUI(webapp2.RequestHandler):
     def get(self):
@@ -362,6 +371,5 @@ app = webapp2.WSGIApplication([
     ('/subscribe', HandleSubsrciption),
     ('/unsubscribe', HandleUnsubsrciption),
     ('/unsubscribe_many', HandleUnsubsrciptionMulti),
-    ('/error',HandleErrorUI),
-    ('/social',HandleSocialUI)
+    ('/social', HandleSocialUI)
 ])
