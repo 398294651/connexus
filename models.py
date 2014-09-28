@@ -14,6 +14,10 @@ class Image(ndb.Model):
     date = ndb.DateTimeProperty(auto_now_add=True, required=True)
 
 
+class Meta(ndb.Model):
+    email_duration = ndb.IntegerProperty()
+
+
 class Stream(ModelUtils, ndb.Model):
     """Models a Stream which contains many images
     """

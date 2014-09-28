@@ -1,7 +1,7 @@
+import datetime
 import json
 import os
 import requests
-import time
 from urlparse import urlparse
 
 import jinja2
@@ -9,7 +9,7 @@ import webapp2
 from google.appengine.ext import db
 from google.appengine.api import images, users, mail
 
-from models import Image, Stream, Leaderboard, View, User
+from models import Image, Stream, Leaderboard, View, User, Meta
 from utils import MyEncoder
 
 DEFAULT_COVER = "http://college-social.com/content" + \
@@ -23,6 +23,7 @@ JINJA_ENVIRONMENT = jinja2.Environment(
 IMG_CNT = 8
 IMG_OFF = 0
 SEARCH_COUNT = 5
+LEADERBOARD_UPDATE_DURATION = 60
 
 
 def domain(url):
@@ -64,12 +65,43 @@ class HandleUser(webapp2.RequestHandler):
         return self.response.out.write(json.dumps(user_dict, cls=MyEncoder))
 
 
-class HandleCron(webapp2.RequestHandler):
+def email_trends():
+    leaders = Leaderboard.query().order(
+        -Leaderboard.view_count).fetch(3)
+    if not leaders:
+        Leaderboard.refresh(LEADERBOARD_UPDATE_DURATION)
+        leaders = Leaderboard.query().order(
+            -Leaderboard.view_count).fetch(3)
+
+    message = "Current leaders are: \n\t"
+    for leader in leaders:
+        message += leader.stream_id.id() + ", "
+    return message
+
+
+class HandleLeaderboard(webapp2.RequestHandler):
+    def get(self):
+        Leaderboard.refresh(LEADERBOARD_UPDATE_DURATION)
+
+
+class HandleEmailCron(webapp2.RequestHandler):
+    def get(self):
+        time = datetime.datetime.time(datetime.datetime.now())
+        meta = Meta.get_by_id('meta')
+        if meta:
+            duration = meta.email_duration
+            if ((duration == 5) or
+                (duration == 60 and time.minute == 0) or (
+                    duration == 1440 and time.hour == 0 and time.minute == 0)):
+                    return self.response.out.write(email_trends())
+
     def post(self):
         duration = self.request.get('duration')
-        Leaderboard.refresh(duration)
-        # TODO: Change cron timings
-        time.sleep(1)
+        meta = Meta.get_by_id('meta')
+        if not meta:
+            meta = Meta(id='meta')
+        meta.email_duration = int(duration)
+        meta.put()
         return self.redirect('/trending?duration='+duration)
 
 
@@ -324,7 +356,8 @@ app = webapp2.WSGIApplication([
     ('/stream', HandleStream),
     ('/image', HandleImage),
     ('/search', HandleSearch),
-    ('/cron', HandleCron),
+    ('/cron', HandleEmailCron),
+    ('/update_leaderboard', HandleLeaderboard),
     ('/delete_stream', HandleDeleteMulti),
     ('/subscribe', HandleSubsrciption),
     ('/unsubscribe', HandleUnsubsrciption),
