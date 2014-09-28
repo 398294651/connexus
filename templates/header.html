@@ -6,6 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Conneksus</title>
 
+    <link rel="stylesheet" href="../css/sass-compiled.css" />
     <link rel="stylesheet" href="//cdn.datatables.net/1.10.2/css/jquery.dataTables.css">
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css">
     <link rel="icon" type="image/png" href="../images/favicon.ico" />
@@ -23,13 +24,13 @@
         <span class="icon-bar"></span>
         <span class="icon-bar"></span>
       </button>
-      <a class="navbar-brand" href="#">Conneksus</a>
+      <a class="navbar-brand" id="home" href="/">Conneksus</a>
     </div>
 
     <!-- Collect the nav links, forms, and other content for toggling -->
     <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
       <ul class="nav navbar-nav">
-        <li id="home"><a href="/">Home</a></li>
+          <!-- <li id="home"><a href="/">Home</a></li> -->
         <li id="manage"><a href="/manage">Manage</a></li>
         <li id="create"><a href="/create">Create</a></li>
         <li id="view"><a href="/view">View</a></li>
@@ -57,5 +58,7 @@
 
     <!-- Include all compiled plugins (below), or include individual files as needed -->
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/js/bootstrap.min.js"></script>
+    
+    <script src="../js/modernizr.js"></script>
   </body>
 </html>
