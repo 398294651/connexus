@@ -65,7 +65,7 @@ class User(ModelUtils, ndb.Model):
                  'last_date': stream.get().last_image_date(),
                  'view_count': stream.get().view_count,
                  'image_count': stream.get().image_count()}
-                for stream in self.subscribed_ids if stream.id()]
+                for stream in self.subscribed_ids if stream.get()]
 
 
 class View(ndb.Model):
