@@ -83,9 +83,6 @@ window.onload = function(){
   }
 
   function fbposttowall(){
-    var str = '{{ domain_url }}/view?stream_name={{ stream_name }}'
-    alert(str)
-
     var data=
         {
             caption: 'This is my wall post example',
@@ -103,10 +100,6 @@ window.onload = function(){
             if (response.error)
             {
                 alert(response.error.message);
-            }
-            else
-            {
-                alert("Posted as "+response.id);        
             }
         }
         // user cancelled
