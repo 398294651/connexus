@@ -55,9 +55,10 @@ def send_subscribtion_invite_email(stream_add_subscribers_email_list,
     stream_link = domain(request_url) + '/view?stream_name=' + stream_name
     # TODO: de-duplicate email addresses
     for add in stream_add_subscribers_email_list:
-        mail.send_mail(sender=SENDER,
-                       to=add, subject="Invite for " + stream_name,
-                       body=stream_email_body + '\n' + stream_link)
+        if add:
+            mail.send_mail(sender=SENDER,
+                           to=add, subject="Invite for " + stream_name,
+                           body=stream_email_body + '\n' + stream_link)
     return
 
 
@@ -193,8 +194,8 @@ class HandleStream(webapp2.RequestHandler):
         stream_add_subscribers_email_list = req.get(
             'email_list').split(',')
         stream_email_body = req.get('email_body')
-        if Stream.get_by_id(stream_name):
-            data['msg'] = 'Sorry! Stream already exists.'
+        if not stream_name or Stream.get_by_id(stream_name):
+            data['msg'] = 'Sorry! Stream already exists/Name empty.'
             template = JINJA_ENVIRONMENT.get_template('error.html')
             return self.response.write(template.render(data))
         stream = Stream(id=stream_name, tags=stream_tags,
@@ -235,11 +236,17 @@ class HandleImage(webapp2.RequestHandler):
 
     def post(self):
         stream_id = self.request.get('stream_id')
-        if not Stream.get_by_id(stream_id):
-            return self.response.out.write('Stream id %s not found!' %
-                                           stream_id)
-        stream = Stream.get_by_id(stream_id)
+        template = JINJA_ENVIRONMENT.get_template('error.html')
 
+        data = {}
+        if not Stream.get_by_id(stream_id):
+            data['msg'] = 'Stream id %s not found!' % stream_id
+            return self.response.write(template.render(data))
+        if not self.request.get('img'):
+            data['msg'] = 'Hey, Upload an image first!'
+            return self.response.write(template.render(data))
+
+        stream = Stream.get_by_id(stream_id)
         avatar = images.resize(self.request.get('img'), 320, 320)
         image = Image(data=db.Blob(avatar),
                       comment=self.request.get('comment')).put()
