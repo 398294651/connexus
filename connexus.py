@@ -239,6 +239,7 @@ class HandleViewStreamUI(webapp2.RequestHandler):
 
     def get(self):
         data = populate_user()
+        data['domain_url'] = domain(self.request.url)
         name = self.request.get('stream_name')
         if not name:
             template = JINJA_ENVIRONMENT.get_template('view_all.html')
@@ -313,6 +314,14 @@ class HandleSocialUI(webapp2.RequestHandler):
         template = JINJA_ENVIRONMENT.get_template('social.html')
         self.response.write(template.render(populate_user()))
 
+class HandleFacebookLoginSuccessful(webapp2.RequestHandler):
+    def get(self):
+        print self.request.referer
+        if self.request.referer != domain(self.request.url) + '/social':
+            return self.redirect('/social')
+        template = JINJA_ENVIRONMENT.get_template('facebook_login_successful.html')
+        self.response.write(template.render(populate_user()))
+
 app = webapp2.WSGIApplication([
     ('/', HandleLogin),
     ('/manage', HandleManageUserUI),
@@ -330,5 +339,6 @@ app = webapp2.WSGIApplication([
     ('/unsubscribe', HandleUnsubsrciption),
     ('/unsubscribe_many', HandleUnsubsrciptionMulti),
     ('/error',HandleErrorUI),
-    ('/social',HandleSocialUI)
+    ('/social',HandleSocialUI),
+    ('/facebook_login_successful',HandleFacebookLoginSuccessful)
 ])
