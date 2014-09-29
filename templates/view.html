@@ -101,6 +101,10 @@ window.onload = function(){
             {
                 alert(response.error.message);
             }
+            else{
+                document.getElementById('status').innerHTML =        
+                    'Posted successfully on your wall!';
+            }
         }
         // user cancelled
     }
@@ -180,5 +184,7 @@ window.onload = function(){
     </div>
 </div>
 
+<div id="post_status">
+</div>
 
 
