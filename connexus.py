@@ -380,7 +380,6 @@ app = webapp2.WSGIApplication([
     ('/subscribe', HandleSubsrciption),
     ('/unsubscribe', HandleUnsubsrciption),
     ('/unsubscribe_many', HandleUnsubsrciptionMulti),
-    ('/error',HandleErrorUI),
     ('/social',HandleSocialUI),
     ('/facebook_login_successful',HandleFacebookLoginSuccessful)
 ])
