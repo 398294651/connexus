@@ -267,19 +267,25 @@ class HandleTrendingUI(webapp2.RequestHandler):
 
 class HandleManageUserUI(webapp2.RequestHandler):
     def get(self):
-        if not populate_user()['logged_in']:
-            return self.redirect('/')
+        template = JINJA_ENVIRONMENT.get_template('manage.html')
         data = populate_user()
+        if not data['logged_in']:
+            template = JINJA_ENVIRONMENT.get_template('error.html')
+            data['msg'] = 'Please log in to create and share streams'
+            return self.response.write(template.render(data))
         data.update(requests.get(domain(self.request.url) + '/user',
                     params={'user_id': data['nickname']}).json())
-        template = JINJA_ENVIRONMENT.get_template('manage.html')
         return self.response.write(template.render(data))
 
 
 class HandleCreateStreamUI(webapp2.RequestHandler):
     def get(self):
         template = JINJA_ENVIRONMENT.get_template('create.html')
-        self.response.write(template.render(populate_user()))
+        data = populate_user()
+        if not data['logged_in']:
+            template = JINJA_ENVIRONMENT.get_template('error.html')
+            data['msg'] = 'Please log in to create and share streams'
+        self.response.write(template.render(data))
 
 
 class HandleViewStreamUI(webapp2.RequestHandler):
