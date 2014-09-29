@@ -85,8 +85,8 @@ window.onload = function(){
   function fbposttowall(){
     var data=
         {
-            caption: 'This is my wall post example',
-            message: 'Posted using FB.api',
+            caption: 'Click on the link to visit my photo stream',
+            message: 'Check out my photo stream at Conneksus, the new cool photo sharing app!',
             link: '{{ domain_url }}/view?stream_name={{ stream_name }}',  
          }
     FB.api('/me/feed', 'post', data, onPostToWallCompleted);    
