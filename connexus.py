@@ -93,6 +93,17 @@ class HandleLeaderboard(webapp2.RequestHandler):
         Leaderboard.refresh(LEADERBOARD_UPDATE_DURATION)
 
 
+class PopulateSearchTag(webapp2.RequestHandler):
+    def get(self):
+        tags = set()
+        for stream in Stream.query().fetch():
+            tags.update(stream.tags)
+            tags.add(stream.key.id())
+        meta = Meta.get_meta()
+        meta.cached_tags = list(tags)
+        meta.put()
+
+
 class HandleEmailCron(webapp2.RequestHandler):
     def get(self):
         time = datetime.datetime.time(datetime.datetime.now())
@@ -109,9 +120,7 @@ class HandleEmailCron(webapp2.RequestHandler):
 
     def post(self):
         duration = self.request.get('duration')
-        meta = Meta.get_by_id('meta')
-        if not meta:
-            meta = Meta(id='meta')
+        meta = Meta.get_meta
         meta.email_duration = int(duration)
         meta.put()
         return self.redirect('/trending?duration='+duration)
@@ -271,6 +280,7 @@ class HandleManageUserUI(webapp2.RequestHandler):
         data = populate_user()
         if not data['logged_in']:
             template = JINJA_ENVIRONMENT.get_template('error.html')
+            data['active'] = 'manage'
             data['msg'] = 'Please log in to create and share streams'
             return self.response.write(template.render(data))
         data.update(requests.get(domain(self.request.url) + '/user',
@@ -284,6 +294,7 @@ class HandleCreateStreamUI(webapp2.RequestHandler):
         data = populate_user()
         if not data['logged_in']:
             template = JINJA_ENVIRONMENT.get_template('error.html')
+            data['active'] = 'create'
             data['msg'] = 'Please log in to create and share streams'
         self.response.write(template.render(data))
 
@@ -357,6 +368,17 @@ class HandleUnsubsrciptionMulti(webapp2.RequestHandler):
         user.put()
 
 
+class HandleSearchTags(webapp2.RequestHandler):
+    def get(self):
+        query = self.request.get('term')
+        meta = Meta.get_meta()
+        if meta:
+            tags = meta.cached_tags
+        filtered_tags = filter(lambda x: query in x, tags)
+        self.response.headers['Content-Type'] = 'application/json'
+        return self.response.out.write(json.dumps(sorted(filtered_tags)))
+
+
 class HandleLogin(webapp2.RequestHandler):
     def get(self):
         template = JINJA_ENVIRONMENT.get_template('index.html')
@@ -368,12 +390,14 @@ class HandleSocialUI(webapp2.RequestHandler):
         template = JINJA_ENVIRONMENT.get_template('social.html')
         self.response.write(template.render(populate_user()))
 
+
 class HandleFacebookLoginSuccessful(webapp2.RequestHandler):
     def get(self):
         print self.request.referer
         if self.request.referer != domain(self.request.url) + '/social':
             return self.redirect('/social')
-        template = JINJA_ENVIRONMENT.get_template('facebook_login_successful.html')
+        template = JINJA_ENVIRONMENT.get_template(
+            'facebook_login_successful.html')
         self.response.write(template.render(populate_user()))
 
 app = webapp2.WSGIApplication([
@@ -387,12 +411,14 @@ app = webapp2.WSGIApplication([
     ('/stream', HandleStream),
     ('/image', HandleImage),
     ('/search', HandleSearch),
+    ('/get_tags', HandleSearchTags),
     ('/cron', HandleEmailCron),
     ('/update_leaderboard', HandleLeaderboard),
+    ('/update_search_tag', PopulateSearchTag),
     ('/delete_stream', HandleDeleteMulti),
     ('/subscribe', HandleSubsrciption),
     ('/unsubscribe', HandleUnsubsrciption),
     ('/unsubscribe_many', HandleUnsubsrciptionMulti),
-    ('/social',HandleSocialUI),
-    ('/facebook_login_successful',HandleFacebookLoginSuccessful)
+    ('/social', HandleSocialUI),
+    ('/facebook_login_successful', HandleFacebookLoginSuccessful)
 ])

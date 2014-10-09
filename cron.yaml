@@ -5,3 +5,6 @@ cron:
 - description: 5 mins job to email
   url: /cron
   schedule: every 5 mins synchronized
+- description: hourly job to update search tags
+  url: /update_search_tag
+  schedule: every 1 hours synchronized

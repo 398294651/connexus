@@ -3,7 +3,7 @@
 
   <form class="form" role="search" style="width:30%" action="/search" method="get">
     <div class="form-group">
-        <input type="text" class="form-control" placeholder="Search" name="query" value="{{query}}">
+        <input type="text" id="query" class="form-control" placeholder="Search" name="query" value="{{query}}">
     </div>
     <button type="submit" class="btn btn-default">Search</button>
   </form>
@@ -17,3 +17,23 @@
         <a href="/view?stream_name={{stream.id}}"><span  style="color: white" class="pic-caption bottom-to-top"><h1 class="pic-title">{{stream.id}}</h1><p>Click to dig</p></span></a>
     </div>
 {% endfor %}
+
+<script>
+$(function() {
+        var cache = {};
+        $( "#query" ).autocomplete({
+            minLength: 1,
+            source: function( request, response ) {
+            var term = request.term;
+            if ( term in cache ) {
+            response( cache[ term ] );
+            return;
+            }
+            $.getJSON( "get_tags", request, function( data, status, xhr ) {
+                cache[ term ] = data;
+                response( data );
+                });
+            }
+            });
+        });
+ </script>

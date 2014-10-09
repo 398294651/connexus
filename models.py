@@ -16,6 +16,14 @@ class Image(ndb.Model):
 
 class Meta(ndb.Model):
     email_duration = ndb.IntegerProperty()
+    cached_tags = ndb.StringProperty(repeated=True)
+
+    @classmethod
+    def get_meta(cls):
+        meta = Meta.get_by_id('meta')
+        if not meta:
+            meta = Meta(id='meta')
+        return meta
 
 
 class Stream(ModelUtils, ndb.Model):
