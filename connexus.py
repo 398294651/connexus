@@ -340,15 +340,14 @@ class HandleViewStreamUI(webapp2.RequestHandler):
                 image = Image.get_by_id(image_id)
                 data['geo_details'][image_id] = {'lat': image.lat,
                                                  'lng': image.lng,
-                                                 'data': image.date}
+                                                 'date': image.date.isoformat()
+                                                 }
 
         if response.status_code == requests.codes.OK:
             image_ids = response.json()['image_ids']
             data['more'] = len(image_ids) > (data['offset'] + data['count'])
             data['prev'] = data['offset'] > 0
             self.process(image_ids, data)
-        print "--------------------"
-        print data
         self.response.write(template.render(data))
 
 

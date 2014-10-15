@@ -15,6 +15,7 @@
 <script type="text/javascript" src="../js/jQDateRangeSlider-min.js"></script>
 
 <script>
+var latlng = {}
 today = new Date();
 prev_year = new Date(new Date().setDate(today.getDate()-365));
 $("#dateSlider").dateRangeSlider(
@@ -23,7 +24,22 @@ $("#dateSlider").dateRangeSlider(
         defaultValues: { min: prev_year, max: today },
         });
 $("#dateSlider").bind("valuesChanged", function(e, data){
-    console.log("Values just changed. min: " + data.values.min + " max: " + data.values.max);
+    var min = data.values.min;
+    var max = new Date(data.values.max.getTime()+(1*24*60*60*1000));
+
+    console.log("Values just changed. min: " + data.values.min + " max-1: " + data.values.max + " max: " + max);
+    $('#map_canvas').gmap('clear', 'markers');
+
+    for(var img in latlng) {
+        if(min < latlng[img]['date'] && latlng[img]['date'] < max) {
+            $('#map_canvas').gmap('addMarker', { 
+                'img_id': img,
+                'position': new google.maps.LatLng(latlng[img]['lat'], latlng[img]['lng']) 
+            }).click(function() {
+                $('#map_canvas').gmap('openInfoWindow', { content : '<img style="width:100px" src="image?image_id='+ this.img_id +'">' }, this);
+            });
+        }
+    }
 });
 
 // We need to bind the map with the "init" event otherwise bounds will be null
@@ -36,10 +52,12 @@ $('#map_canvas').gmap({'zoom': 1, 'disableDefaultUI':true}).bind('init', functio
     {% for image_id in image_ids %}
         var lat = southWest.lat() + latSpan * Math.random();
         var lng = southWest.lng() + lngSpan * Math.random();
-        {% if geo_details[image_id][lat] %}
-            var lat = {{geo_details[image_id][lat]}}; 
-            var lng = {{geo_details[image_id][lng]}}; 
+        {% if geo_details[image_id]['lat'] %}
+            lat = {{geo_details[image_id]['lat']}}; 
+            lng = {{geo_details[image_id]['lng']}}; 
         {% endif %}
+        latlng[{{ image_id }}] = {lat: lat, lng: lng, date: new Date("{{geo_details[image_id]['date']}}")}
+        
         $('#map_canvas').gmap('addMarker', { 
             'position': new google.maps.LatLng(lat, lng) 
         }).click(function() {
