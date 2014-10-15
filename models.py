@@ -11,6 +11,8 @@ class Image(ndb.Model):
     """
     data = ndb.BlobProperty()
     comment = ndb.StringProperty()
+    lat = ndb.FloatProperty()
+    lng = ndb.FloatProperty()
     date = ndb.DateTimeProperty(auto_now_add=True, required=True)
 
 

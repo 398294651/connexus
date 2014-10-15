@@ -57,3 +57,5 @@
         background-color: #1c85ac;
     }
 }
+
+ul.nav a:hover { background-color: #41C1C6 !important; }

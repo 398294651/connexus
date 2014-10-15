@@ -1,5 +1,9 @@
 {% include 'header.html' %}
+{% if geo %}
+<script>$('#view_geo').addClass("active")</script>
+{% else %}
 <script>$('#view').addClass("active")</script>
+{% endif %}
 
 <script>
 var accessToken;

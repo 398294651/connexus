@@ -1,11 +1,17 @@
 {% include 'header.html' %}
-<script>$('#view').addClass("active")</script>
 
+{% if geo %}
+<h3>Click on a stream to get the GeoView&#0153;</h3><br/>
+<script>$('#view_geo').addClass("active")</script>
+{% else %}
+<script>$('#view').addClass("active")</script>
 <h3>All streams</h3><br/>
+{% endif %}
+
 {% for stream in streams %}
     <div class="pic">
         <img class=" img-rounded pic-image" src="{{stream.cover_url}}">
-        <a href="/view?stream_name={{stream.id}}"><span  style="color: white" class="pic-caption bottom-to-top"><h1 class="pic-title">{{stream.id}}</h1><p>Click to dig</p></span></a>
+        <a href="/view?stream_name={{stream.id}}{{ geo }}"><span  style="color: white" class="pic-caption bottom-to-top"><h1 class="pic-title">{{stream.id}}</h1><p>Click to dig</p></span></a>
     </div>
 {% endfor %}
 

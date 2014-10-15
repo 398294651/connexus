@@ -257,8 +257,13 @@ class HandleImage(webapp2.RequestHandler):
 
         stream = Stream.get_by_id(stream_id)
         avatar = images.resize(self.request.get('img'), 320, 320)
+        lat = self.request.get('lat')
+        lat = float(lat) if lat else None
+        lng = self.request.get('lng')
+        lng = float(lng) if lng else None
         image = Image(data=db.Blob(avatar),
-                      comment=self.request.get('comment')).put()
+                      comment=self.request.get('comment'),
+                      lat=lat, lng=lng).put()
         stream.image_ids.append(image)
         stream.put()
         return self.redirect('/view?stream_name='+stream_id)
@@ -301,8 +306,6 @@ class HandleCreateStreamUI(webapp2.RequestHandler):
 
 class HandleViewStreamUI(webapp2.RequestHandler):
     def process(self, image_arr, data):
-        # reverse to show new first
-        print image_arr
         data['image_ids'] = list(reversed(
             image_arr))[data['offset']:(data['offset'] + data['count'])]
 
@@ -310,6 +313,8 @@ class HandleViewStreamUI(webapp2.RequestHandler):
         data = populate_user()
         data['domain_url'] = domain(self.request.url)
         name = self.request.get('stream_name')
+        if self.request.get('geo'):
+            data['geo'] = '&geo=1'
         if not name:
             template = JINJA_ENVIRONMENT.get_template('view_all.html')
             response = requests.get(
@@ -325,12 +330,25 @@ class HandleViewStreamUI(webapp2.RequestHandler):
         data['stream_name'] = name
         data['offset'] = int(self.request.get('offset', IMG_OFF))
         data['count'] = int(self.request.get('count', IMG_CNT))
+        template = JINJA_ENVIRONMENT.get_template('view.html')
+        if 'geo' in data:
+            template = JINJA_ENVIRONMENT.get_template('view_geo.html')
+            data['offset'] = 0
+            data['count'] = 100
+            data['geo_details'] = {}
+            for image_id in response.json()['image_ids']:
+                image = Image.get_by_id(image_id)
+                data['geo_details'][image_id] = {'lat': image.lat,
+                                                 'lng': image.lng,
+                                                 'data': image.date}
+
         if response.status_code == requests.codes.OK:
             image_ids = response.json()['image_ids']
             data['more'] = len(image_ids) > (data['offset'] + data['count'])
             data['prev'] = data['offset'] > 0
             self.process(image_ids, data)
-        template = JINJA_ENVIRONMENT.get_template('view.html')
+        print "--------------------"
+        print data
         self.response.write(template.render(data))
 
 
@@ -376,7 +394,7 @@ class HandleSearchTags(webapp2.RequestHandler):
             tags = meta.cached_tags
         filtered_tags = filter(lambda x: query in x, tags)
         self.response.headers['Content-Type'] = 'application/json'
-        return self.response.out.write(json.dumps(sorted(filtered_tags)))
+        return self.response.out.write(json.dumps(sorted(filtered_tags)[:20]))
 
 
 class HandleLogin(webapp2.RequestHandler):
