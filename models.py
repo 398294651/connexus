@@ -1,5 +1,6 @@
 import datetime
 import operator
+import threading
 
 from google.appengine.ext import ndb
 
@@ -36,6 +37,17 @@ class Stream(ModelUtils, ndb.Model):
     cover_url = ndb.StringProperty()
     view_count = ndb.IntegerProperty(default=0)
     date = ndb.DateTimeProperty(auto_now_add=True, required=True)
+    _use_memcache = False
+    _use_cache = False
+    _config_lock = threading.Lock()
+
+    @classmethod
+    def append_image(cls, stream_id, image_id):
+        with cls._config_lock:
+            stream = Stream.get_by_id(stream_id)
+            stream.image_ids.append(image_id)
+            stream.put()
+            print stream.image_ids
 
     def check_tags(self, query):
         for tag in self.tags:
