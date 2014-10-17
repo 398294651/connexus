@@ -239,6 +239,8 @@ class HandleSearch(webapp2.RequestHandler):
 
 class HandleImage(webapp2.RequestHandler):
     def get(self):
+        if not self.request.get('image_id'):
+            return self.redirect('/view')
         self.response.headers['Content-Type'] = 'image/png'
         self.response.out.write(Image.get_by_id(int(
             self.request.get('image_id'))).data)
@@ -251,22 +253,26 @@ class HandleImage(webapp2.RequestHandler):
         if not Stream.get_by_id(stream_id):
             data['msg'] = 'Stream id %s not found!' % stream_id
             return self.response.write(template.render(data))
-        if not self.request.get('img'):
+        if not self.request.get('files[]'):
             data['msg'] = 'Hey, Upload an image first!'
             return self.response.write(template.render(data))
 
-        stream = Stream.get_by_id(stream_id)
-        avatar = images.resize(self.request.get('img'), 320, 320)
-        lat = self.request.get('lat')
-        lat = float(lat) if lat else None
-        lng = self.request.get('lng')
-        lng = float(lng) if lng else None
-        image = Image(data=db.Blob(avatar),
-                      comment=self.request.get('comment'),
-                      lat=lat, lng=lng).put()
-        stream.image_ids.append(image)
-        stream.put()
-        return self.redirect('/view?stream_name='+stream_id)
+        results = []
+        for img in self.request.get_all('files[]'):
+            results.append({'name': '', 'url': '', 'type': '', 'size': 64})
+            avatar = images.resize(img, 320, 320)
+            lat = self.request.get('lat')
+            lat = float(lat) if lat else None
+            lng = self.request.get('lng')
+            lng = float(lng) if lng else None
+            image = Image(data=db.Blob(avatar),
+                          comment=self.request.get('comment'),
+                          lat=lat, lng=lng).put()
+            Stream.append_image(stream_id, image)
+        s = json.dumps({'files': results}, separators=(',', ':'))
+        self.response.headers['Content-Type'] = 'application/json'
+        return self.response.write(s)
+        # return self.redirect('/view?stream_name='+stream_id)
 
 
 class HandleTrendingUI(webapp2.RequestHandler):
