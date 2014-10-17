@@ -4,6 +4,10 @@ import os
 import requests
 from urlparse import urlparse
 
+import logging
+
+logging.getLogger().setLevel(logging.DEBUG)
+
 import jinja2
 import webapp2
 from google.appengine.ext import db
@@ -11,6 +15,11 @@ from google.appengine.api import images, users, mail
 
 from models import Image, Stream, Leaderboard, View, User, Meta
 from utils import MyEncoder
+
+#import endpoints
+#from protorpc import messages
+#from protorpc import message_types
+#from protorpc import remote
 
 DEFAULT_COVER = "http://college-social.com/content" + \
     "/uploads/2014/03/not-found.png"
@@ -275,6 +284,19 @@ class HandleImage(webapp2.RequestHandler):
         # return self.redirect('/view?stream_name='+stream_id)
 
 
+class HandleExternalInsert(webapp2.RequestHandler):
+    def post(self):
+        stream_id = self.request.get('stream_id')
+        img_blob = self.request.get('img_blob')
+        template = JINJA_ENVIRONMENT.get_template('error.html')
+        lat = self.request.get('lat')
+        lat = float(lat) if lat else None
+        lng = self.request.get('lng')
+        lng = float(lng) if lng else None
+        image = Image(data=img_blob,comment=' ',lat=lat, lng=lng).put()
+        #logging.error('Stream ID:%s',str(stream_id)) 
+        Stream.append_image(stream_id, image)
+
 class HandleTrendingUI(webapp2.RequestHandler):
     def get(self):
         template = JINJA_ENVIRONMENT.get_template('trending.html')
@@ -429,7 +451,6 @@ app = webapp2.WSGIApplication([
     ('/create', HandleCreateStreamUI),
     ('/view', HandleViewStreamUI),
     ('/trending', HandleTrendingUI),
-
     ('/user', HandleUser),
     ('/stream', HandleStream),
     ('/image', HandleImage),
@@ -443,5 +464,6 @@ app = webapp2.WSGIApplication([
     ('/unsubscribe', HandleUnsubsrciption),
     ('/unsubscribe_many', HandleUnsubsrciptionMulti),
     ('/social', HandleSocialUI),
-    ('/facebook_login_successful', HandleFacebookLoginSuccessful)
+    ('/facebook_login_successful', HandleFacebookLoginSuccessful),
+    ('/external_insert',HandleExternalInsert)
 ])
