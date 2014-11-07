@@ -106,7 +106,8 @@ public class LoginActivity extends PlusBaseActivity implements LoaderCallbacks<C
         mEmailSignInButton.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View view) {
-                attemptLogin();
+//                attemptLogin();
+                gotoViewStreams();
             }
         });
 
