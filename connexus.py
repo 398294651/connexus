@@ -376,6 +376,11 @@ class HandleViewStreamUI(webapp2.RequestHandler):
             data['more'] = len(image_ids) > (data['offset'] + data['count'])
             data['prev'] = data['offset'] > 0
             self.process(image_ids, data)
+
+        if self.request.get('raw'):
+            self.response.headers['Content-Type'] = 'application/json'
+            return self.response.out.write(json.dumps(data))
+
         self.response.write(template.render(data))
 
 

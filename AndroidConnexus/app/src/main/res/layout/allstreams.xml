@@ -4,7 +4,7 @@
     <GridView xmlns:android="http://schemas.android.com/apk/res/android"
         android:id="@+id/gridview"
         android:layout_width="match_parent"
-        android:layout_height="301dp"
+        android:layout_height="283dp"
         android:columnWidth="90dp"
         android:numColumns="auto_fit"
         android:verticalSpacing="10dp"
@@ -14,9 +14,30 @@
         />
     <ImageView android:id="@+id/GalleryView"
         android:layout_width="fill_parent" android:layout_height="wrap_content" />
+    <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+        android:layout_width="fill_parent" android:layout_height="70dp">
+    <EditText
+        android:layout_width="206dp"
+        android:layout_height="wrap_content"
+        android:id="@+id/editText"
+        android:text="Find Streams" />
+    <Button
+        style="?android:attr/buttonStyleSmall"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Nearby"
+        android:id="@+id/searchButtonNearby" />
+</LinearLayout>
+    <Button
+        style="?android:attr/buttonStyleSmall"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Search"
+        android:id="@+id/searchButton" />
+
     <Button
         android:id="@+id/button1"
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
-        android:text="Click me to another screen" />
+        android:text="My Subscribed Streams" />
 </LinearLayout>

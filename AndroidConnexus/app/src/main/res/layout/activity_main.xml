@@ -10,12 +10,29 @@
     <LinearLayout
         android:id="@+id/linear_layout"
         android:layout_width="fill_parent"
-        android:layout_height="wrap_content" >
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+        <Button
+            android:id="@+id/pick_from_gallery"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Choose from your library" />
+        <Button
+            android:id="@+id/chose_camera"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Chose Camera" />
+        <EditText
+            android:layout_width="206dp"
+            android:layout_height="wrap_content"
+            android:id="@+id/editText"
+            android:text="Add a message OR Tags" />
         <Button
             android:id="@+id/take_photo"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Upload Photo" />
+
     </LinearLayout>
     <ImageView
         android:id="@+id/imageview"
