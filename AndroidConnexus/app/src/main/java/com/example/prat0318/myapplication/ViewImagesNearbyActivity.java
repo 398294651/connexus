@@ -8,6 +8,9 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
+import android.location.Location;
+import android.location.LocationListener;
+import android.location.LocationManager;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.StrictMode;
@@ -47,6 +50,36 @@ public class ViewImagesNearbyActivity extends Activity {
 
     public static int offset = 0;
 
+    double longitude, latitude;
+    LocationManager lm;
+    private final LocationListener locationListener = new LocationListener() {
+        public void onLocationChanged(Location location) {
+            longitude = location.getLongitude();
+            latitude = location.getLatitude();
+            System.out.println(">> LAT: " + latitude + " LON: " + longitude);
+            Intent i = getIntent();
+            i.putExtra("lat", latitude);
+            i.putExtra("lng", longitude);
+            finish();
+            startActivity(i);
+        }
+
+        @Override
+        public void onStatusChanged(String provider, int status, Bundle extras) {
+
+        }
+
+        @Override
+        public void onProviderEnabled(String provider) {
+
+        }
+
+        @Override
+        public void onProviderDisabled(String provider) {
+
+        }
+    };
+
     /** Called when the activity is first created. */
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -60,9 +93,15 @@ public class ViewImagesNearbyActivity extends Activity {
         setContentView(R.layout.allimages_nearby);
 
         Bundle extras = getIntent().getExtras();
-        final String stream_id = extras.getString("stream_id");
-
-        TextView stream_name = (TextView) findViewById(R.id.stream_name);
+        if(extras != null) {
+            longitude = extras.getDouble("lng");
+            latitude = extras.getDouble("lat");
+            TextView stream_name = (TextView) findViewById(R.id.stream_name);
+            stream_name.setText("Images from Nearby Streams (" + (int) longitude + ", " + (int) latitude + ")");
+        } else {
+            lm = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+            lm.requestLocationUpdates(LocationManager.GPS_PROVIDER, 2000, 10, locationListener);
+        }
 
         imageAdapter = new ImageAdapter(this);
         final ImageView imgView = (ImageView) findViewById(R.id.GalleryView);
@@ -77,33 +116,12 @@ public class ViewImagesNearbyActivity extends Activity {
             }
         });
 
-        Button moreButton = (Button) findViewById(R.id.more);
-        moreButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View arg0) {
-                ViewImagesNearbyActivity.offset += 6;
-                recreate();
-            }
-        });
-//        Gallery g = (Gallery) findViewById(R.id.Gallery);
         g.setAdapter(imageAdapter);
-//        g.setOnItemClickListener(new OnItemClickListener() {
-//            public void onItemClick(AdapterView<?> parent, View v,
-//                                    int position, long id) {
-//                imgView.setImageDrawable(LoadImageFromURL(PhotoURLS
-//                        .get(position)));
-//                imgView.setScaleType(ImageView.ScaleType.FIT_CENTER);
-//            }
-//        });
 
         DefaultHttpClient   httpclient = new DefaultHttpClient(new BasicHttpParams());
-        String stream_id_enc = "";
-        try {
-            stream_id_enc = URLEncoder.encode(stream_id, "utf-8");
-        } catch (UnsupportedEncodingException e) {
-            e.printStackTrace();
-        }
-        HttpGet httpget = new HttpGet("http://conneksus.appspot.com/view?raw=true&offset=" + offset + "&stream_name=" + stream_id_enc);
+
+        System.out.println(">> LAT: " + latitude + " LON: " + longitude);
+        HttpGet httpget = new HttpGet("http://conneksus.appspot.com/nearby?lat=" + latitude + "&lng=" + longitude);
         httpget.setHeader("Content-type", "application/json");
 
         InputStream inputStream = null;
@@ -112,8 +130,8 @@ public class ViewImagesNearbyActivity extends Activity {
             HttpResponse response = httpclient.execute(httpget);
             result = EntityUtils.toString(response.getEntity());
             JSONObject jsonObject = new JSONObject(result);
-            JSONArray jArray = jsonObject.getJSONArray("image_ids");
-            for (int i=0; i < jArray.length(); i++)
+            JSONArray jArray = jsonObject.getJSONArray("images");
+            for (int i=0; i < jArray.length() && i < 9; i++)
             {
                 PhotoURLS.add("http://conneksus.appspot.com/image?image_id=" + jArray.getString(i));
             }

@@ -6,7 +6,7 @@
         android:layout_width="wrap_content"
         android:layout_height="30dp"
         android:textAppearance="?android:attr/textAppearanceMedium"
-        android:text="Fetching GPS...Curr: (0, 0)"
+        android:text="Subscribed Images"
         android:id="@+id/stream_name"
         android:layout_gravity="center_horizontal" />
 
@@ -22,10 +22,10 @@
         android:gravity="center"
         />
 
-    <Button
-        android:id="@+id/streams"
+     <Button
+        android:id="@+id/back"
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
-        android:text="View All Streams" />
+        android:text="Back" />
 
 </LinearLayout>

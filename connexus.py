@@ -1,6 +1,7 @@
 import datetime
 import json
 import os
+import math
 import requests
 from urlparse import urlparse
 
@@ -79,6 +80,7 @@ class HandleUser(webapp2.RequestHandler):
         self.response.headers['Content-Type'] = 'application/json'
         user_dict = user.to_dict()
         user_dict['owned_id_details'] = user.owned_id_details()
+        user_dict['subscribed_images'] = user.subscribed_images()
         user_dict['subscribed_id_details'] = user.subscribed_id_details()
         return self.response.out.write(json.dumps(user_dict, cls=MyEncoder))
 
@@ -242,6 +244,15 @@ class HandleSearch(webapp2.RequestHandler):
         data['results'] = stream_list[:SEARCH_COUNT]
         data['results_count'] = len(stream_list)
         data['query'] = query
+
+        if self.request.get('raw'):
+            print data
+            self.response.headers['Content-Type'] = 'application/json'
+            for stream in data['results']:
+                stream.pop('image_ids', None); stream.pop('date')
+            print data
+            return self.response.out.write(json.dumps(data))
+
         template = JINJA_ENVIRONMENT.get_template('search.html')
         self.response.write(template.render(data))
 
@@ -418,6 +429,15 @@ class HandleUnsubsrciptionMulti(webapp2.RequestHandler):
         user.put()
 
 
+class HandleNearby(webapp2.RequestHandler):
+    def get(self):
+        lat = float(self.request.get('lat'))
+        lng = float(self.request.get('lng'))
+        images = Image.query().fetch()
+        images = sorted(images, key=lambda img: distance_on_unit_sphere(img.lat, img.lng, lat, lng))
+        self.response.headers['Content-Type'] = 'application/json'
+        return self.response.out.write(json.dumps({"images": [img.key.id() for img in images]}))
+
 class HandleSearchTags(webapp2.RequestHandler):
     def get(self):
         query = self.request.get('term')
@@ -452,6 +472,7 @@ class HandleFacebookLoginSuccessful(webapp2.RequestHandler):
 
 app = webapp2.WSGIApplication([
     ('/', HandleLogin),
+    ('/nearby', HandleNearby),
     ('/manage', HandleManageUserUI),
     ('/create', HandleCreateStreamUI),
     ('/view', HandleViewStreamUI),
@@ -472,3 +493,36 @@ app = webapp2.WSGIApplication([
     ('/facebook_login_successful', HandleFacebookLoginSuccessful),
     ('/external_insert',HandleExternalInsert)
 ])
+
+def distance_on_unit_sphere(lat1, long1, lat2, long2):
+
+    if(lat1 == None or long1 == None or lat2 == None or long2 == None):
+        return 10 # > 3.14
+
+    # Convert latitude and longitude to 
+    # spherical coordinates in radians.
+    degrees_to_radians = math.pi/180.0
+        
+    # phi = 90 - latitude
+    phi1 = (90.0 - lat1)*degrees_to_radians
+    phi2 = (90.0 - lat2)*degrees_to_radians
+        
+    # theta = longitude
+    theta1 = long1*degrees_to_radians
+    theta2 = long2*degrees_to_radians
+        
+    # Compute spherical distance from spherical coordinates.
+        
+    # For two locations in spherical coordinates 
+    # (1, theta, phi) and (1, theta, phi)
+    # cosine( arc length ) = 
+    #    sin phi sin phi' cos(theta-theta') + cos phi cos phi'
+    # distance = rho * arc length
+    
+    cos = (math.sin(phi1)*math.sin(phi2)*math.cos(theta1 - theta2) + 
+           math.cos(phi1)*math.cos(phi2))
+    arc = math.acos( cos )
+
+    # Remember to multiply arc by the radius of the earth 
+    # in your favorite set of units to get length.
+    return arc

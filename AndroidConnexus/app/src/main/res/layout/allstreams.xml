@@ -19,24 +19,28 @@
     <EditText
         android:layout_width="206dp"
         android:layout_height="wrap_content"
-        android:id="@+id/editText"
+        android:id="@+id/search_query"
         android:text="Find Streams" />
-    <Button
-        style="?android:attr/buttonStyleSmall"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Nearby"
-        android:id="@+id/searchButtonNearby" />
-</LinearLayout>
-    <Button
-        style="?android:attr/buttonStyleSmall"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Search"
-        android:id="@+id/searchButton" />
+
+        <Button
+            style="?android:attr/buttonStyleSmall"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Search"
+            android:id="@+id/searchButton" />
+
+    </LinearLayout>
 
     <Button
-        android:id="@+id/button1"
+    style="?android:attr/buttonStyleSmall"
+    android:layout_width="105dp"
+    android:layout_height="wrap_content"
+    android:text="Nearby"
+    android:id="@+id/searchButtonNearby"
+        android:layout_gravity="center_horizontal" />
+
+    <Button
+        android:id="@+id/subscribed"
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
         android:text="My Subscribed Streams" />

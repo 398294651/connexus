@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="fill_parent" android:layout_height="fill_parent"  android:orientation="vertical"
+    android:weightSum="1">
+
+    <TextView
+        android:layout_width="323dp"
+        android:layout_height="wrap_content"
+        android:text="Search Results"
+        android:id="@+id/searchText"
+        android:layout_weight="0.12" />
+
+    <TextView
+        android:layout_width="187dp"
+        android:layout_height="wrap_content"
+        android:text="Click to view Stream"
+        android:id="@+id/textView2"
+        android:layout_weight="0.12"
+        android:layout_gravity="center_horizontal" />
+
+    <GridView xmlns:android="http://schemas.android.com/apk/res/android"
+        android:id="@+id/gridview"
+        android:layout_width="match_parent"
+        android:layout_height="283dp"
+        android:columnWidth="90dp"
+        android:numColumns="auto_fit"
+        android:verticalSpacing="10dp"
+        android:horizontalSpacing="10dp"
+        android:stretchMode="columnWidth"
+        android:gravity="center"
+        />
+    <ImageView android:id="@+id/GalleryView"
+        android:layout_width="fill_parent" android:layout_height="wrap_content" />
+    <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+        android:layout_width="fill_parent" android:layout_height="70dp"
+        android:weightSum="1">
+
+    <Button
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="More >>"
+            android:id="@+id/more"
+            android:layout_weight="0.89" />
+    </LinearLayout>
+
+    <Button
+        android:layout_width="106dp"
+        android:layout_height="wrap_content"
+        android:text="Back"
+        android:id="@+id/back"
+        android:layout_weight="0.12"
+        android:layout_gravity="center_horizontal" />
+
+</LinearLayout>

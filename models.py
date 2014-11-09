@@ -82,6 +82,15 @@ class User(ModelUtils, ndb.Model):
                  'image_count': stream.get().image_count()}
                 for stream in self.owned_ids]
 
+    def subscribed_images(self):
+        images = []
+        for stream in self.subscribed_ids:
+            if stream.get():
+                for image_id in stream.get().image_ids:
+                    images.append(Image.get_by_id(int(image_id.id())))
+        sorted_images = sorted(images, key=lambda img: img.date, reverse=True)
+        return [img.key.id() for img in sorted_images]
+
     def subscribed_id_details(self):
         return [{'name': stream.id(),
                  'last_date': stream.get().last_image_date(),
